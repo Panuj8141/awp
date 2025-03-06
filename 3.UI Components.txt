@@ -1,0 +1,154 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'To-do App',
+      theme: ThemeData(primaryColor: Colors.blue),
+      home:TodoApp(),
+    );
+  }
+}
+
+class TodoApp extends StatefulWidget {
+  @override
+  _TodoAppState createState()=>_TodoAppState();
+}
+
+class _TodoAppState extends State<TodoApp> {
+  List<Map<String,dynamic>> _tasks=[];
+  int _selectedIndex=0;
+  final TextEditingController _taskController=TextEditingController();
+
+  void _addTask(){
+    if(_taskController.text.isNotEmpty){
+      setState(() {
+        _tasks.add({"title": _taskController.text,"completed":false});
+      });
+      _taskController.clear();
+      Navigator.pop(context);
+    }
+  }
+
+  void _toggleTask(int index){
+    setState(() {
+      _tasks[index]["completed"]= !_tasks[index]["completed"];
+    });
+  }
+
+  void _deleteTask(int index){
+    setState(() {
+      _tasks.removeAt(index);
+    });
+  }
+
+  void _showAddTaskDialog(){
+    showDialog(
+      context: context,
+      builder:(context){
+        return AlertDialog(
+          title: Text("Add New Task"),
+          content: TextField(
+            controller: _taskController,
+            decoration: InputDecoration(hintText:"Enter task"),
+          ),
+          actions:[
+            TextButton(
+              child: Text("cancel"),
+              onPressed:(){
+                _taskController.clear();
+                Navigator.pop(context);
+              },
+            ),
+            ElevatedButton(
+              child: Text("Add"),
+              onPressed: _addTask,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text ("To-Do App")),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child:Text("Menu",style: TextStyle(fontSize: 24,color:Colors.white)),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title:Text("Home"),
+              onTap: ()=>Navigator.pop(context),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title:Text("Settings"),
+              onTap: () =>Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+      body:_selectedIndex ==0
+      ? (_tasks.isEmpty
+        ? Center(child: Text("No tasks yet! Add a new task."))
+        : ListView.builder(
+            itemCount: _tasks.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: ListTile(
+                  leading: IconButton(
+                    icon: Icon(
+                      _tasks[index]["completed"]?Icons.check_circle:Icons.radio_button_unchecked,
+                      color:_tasks[index]["completed"]?Colors.green :Colors.grey,
+                      ),
+                      onPressed: () =>_toggleTask(index),
+                    ),
+                    title:Text(
+                      _tasks[index]["title"],
+                      style: TextStyle(
+                        decoration: _tasks[index]["completed"]
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                      ),
+                    ),
+                    trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteTask(index),
+                  ),
+                ),
+              );
+            },
+        ))
+      : Center(child:Text("Settings page")),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _showAddTaskDialog,
+      child:Icon(Icons.add),
+    ),
+    bottomNavigationBar: BottomNavigationBar(
+      items: [
+        BottomNavigationBarItem(icon: Icon(Icons.list), label: "Tasks"),
+        BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+      ],
+      currentIndex: _selectedIndex,
+      onTap: (index){
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      ),
+      );
+  }
+}
